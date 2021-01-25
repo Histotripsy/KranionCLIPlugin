@@ -1,0 +1,20 @@
+apply plugin: 'java'
+apply plugin: 'jacoco'
+apply plugin: 'maven-publish'
+
+sourceSets.main.resources {
+    srcDirs = ["src/main/java"];
+    exclude "**/*.java"
+}
+
+repositories {
+    jcenter()
+    flatDir {
+        dirs 'lib'
+    }
+}
+
+dependencies {
+    testImplementation     'junit:junit:4.13'
+    compile fileTree(dir: 'lib', include: '*.jar')
+}
