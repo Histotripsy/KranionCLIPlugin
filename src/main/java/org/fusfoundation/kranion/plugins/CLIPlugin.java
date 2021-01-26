@@ -8,13 +8,16 @@ import org.fusfoundation.kranion.Button;
 import org.fusfoundation.kranion.Renderable;
 import org.fusfoundation.kranion.FlyoutPanel;
 import org.fusfoundation.kranion.GUIControl.HPosFormat;
+import org.fusfoundation.kranion.ListControl;
+import org.fusfoundation.kranion.MessageBoxDialog;
+import org.fusfoundation.kranion.Rectangle;
+import org.fusfoundation.kranion.RenderLayer;
 import org.fusfoundation.kranion.TextBox;
 import org.fusfoundation.kranion.plugin.Plugin;
 
 import org.fusfoundation.kranion.view.View;
 import org.fusfoundation.kranion.model.*;
 import org.fusfoundation.kranion.controller.Controller;
-import org.lwjgl.util.vector.Vector3f;
 
 /**
  *
@@ -26,6 +29,8 @@ public class CLIPlugin implements Plugin, ActionListener {
     private Controller controller;
     private CLI cliThread;
     private int cliPort = 9000;
+    private ListControl cmdList;
+    private MessageBoxDialog messageDialog;
     @Override
     public String getName() {
         return "CLIPlugin";
@@ -36,26 +41,46 @@ public class CLIPlugin implements Plugin, ActionListener {
         this.model = controller.getModel();
         this.view = controller.getView();
         this.controller = controller;
-        this.cliThread = new CLI(this.model, this.view, cliPort);
         System.out.println("******* Hello from CLIPlugin !! ****************");
 
         controller.addActionListener(this);
 
         Renderable mainPanel = Renderable.lookupByTag("MainFlyout");
         if (mainPanel != null && mainPanel instanceof FlyoutPanel) {
+//            RenderLayer
+            RenderLayer overlay = (RenderLayer)Renderable.lookupByTag("DefaultView.overlay_layer");
+            messageDialog = new MessageBoxDialog("");
+            messageDialog.setTag("mbCLIDialog");
+            messageDialog.setBounds(0,0,500,500); // Set better bounds? Allow for overflow!
+            if (overlay != null) {
+                overlay.addChild(messageDialog);
+            }
+//            view.
             FlyoutPanel panel = (FlyoutPanel) mainPanel;
-            Button cliStateToggle = new Button(Button.ButtonType.TOGGLE_BUTTON, 50, 220, 240, 25, controller);
+            Rectangle bounds = panel.getBounds();
+            int height = bounds.getIntHeight();
+            Button cliStateToggle = new Button(Button.ButtonType.TOGGLE_BUTTON, 50, height - 75, 240, 25, controller);
             cliStateToggle.setTitle("CLI State");
             cliStateToggle.setIndicatorRadius(8f);
             cliStateToggle.setCommand("toggleCLI");
-            TextBox portNumBox = new TextBox(190, 190, 100, 25, Integer.toString(cliPort), controller);
+            cliStateToggle.setTag("toggleCLIStateBtn");
+            
+            TextBox portNumBox = new TextBox(190, height - 105, 100, 25, Integer.toString(cliPort), controller);
             portNumBox.setIsNumeric(true);
             portNumBox.setTextEditable(true);
             portNumBox.setTextHorzAlignment(HPosFormat.HPOSITION_RIGHT);
             portNumBox.setTitle("Listen Port Number:");
             portNumBox.setCommand("portNumChange");
+            
+            this.cmdList = new ListControl(300, 50, Math.max(bounds.getIntWidth() - 300 - 10, 300), height - 100, controller);
+            cmdList.setCommand("cmdSelected");
+            cmdList.setTag("lcCLICmdList");
+            
             panel.addChild("CLIPlugin",cliStateToggle);
             panel.addChild("CLIPlugin",portNumBox);
+            panel.addChild("CLIPlugin",cmdList);
+            
+            this.cliThread = new CLI(model, view, cliPort);
         }
     }
     
@@ -108,6 +133,16 @@ public class CLIPlugin implements Plugin, ActionListener {
                 }
                 portBox.setText(portNum);
                 cliPort = Integer.parseInt(portNum);
+            }
+            case "doubleClick" -> {
+                if (e.getSource() instanceof ListControl) {
+                    ListControl lc = (ListControl)e.getSource();
+                    CLIError err = (CLIError)lc.getSelectedValue();
+                    messageDialog.setDialogTitle(err.title);
+                    messageDialog.setMessageText(err.body);
+                    messageDialog.open();
+                    System.out.println(err.body);
+                }
             }
         }
     }
