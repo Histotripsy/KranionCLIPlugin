@@ -102,18 +102,17 @@ public class CLI extends Thread {
             if (jsonObject.has("msgType")) {
                 JsonElement msgType = jsonObject.get("msgType");
                 switch (msgType.getAsString()) {
-                    case "SetAttribute" -> {
+                    case "SetAttribute":
                         err.title = "Registration";
                         if (jsonObject.has("attribute")) {
                             JsonElement attrib = jsonObject.get("attribute");
                             switch (attrib.getAsString()) {
-                                case "quaternion" -> {
+                                case "quaternion":
                                     if (jsonObject.has("data")) {
                                         JsonElement data = jsonObject.get("data");
                                         if (data.isJsonArray()) {
                                             JsonArray dataArr = data.getAsJsonArray();
                                             if (dataArr.size() == 4) {
-                                                System.out.println(data);
                                                 Quaternion obj = new Quaternion(dataArr.get(0).getAsFloat(),
                                                         dataArr.get(1).getAsFloat(),
                                                         dataArr.get(2).getAsFloat(),
@@ -136,14 +135,12 @@ public class CLI extends Thread {
                                     } else {
                                         throw(new Exception("Missing data key"));
                                     }
-                                }
-                                case "translation" -> {
+                                case "translation":
                                     if (jsonObject.has("data")) {
                                         JsonElement data = jsonObject.get("data");
                                         if (data.isJsonArray()) {
                                             JsonArray dataArr = data.getAsJsonArray();
                                             if (dataArr.size() == 3) {
-                                                System.out.println(data);
                                                 Vector3f translation = new Vector3f(dataArr.get(0).getAsFloat(),
                                                         dataArr.get(1).getAsFloat(),
                                                         dataArr.get(2).getAsFloat());
@@ -165,14 +162,14 @@ public class CLI extends Thread {
                                     } else {
                                         throw(new Exception("missing data key"));
                                     }
-                                }
-                                default -> throw(new Exception("Unknown attribute value"));
+                                default:
+                                    throw(new Exception("Unknown attribute value"));
                             }
                         } else {
                             throw(new Exception("Missing attribute key"));
                         }
-                    }
-                    default -> throw(new Exception("Unknown msgType value"));
+                    default:
+                        throw(new Exception("Unknown msgType value"));
                 }
             } else {
                 throw(new Exception("Missing msgType key"));

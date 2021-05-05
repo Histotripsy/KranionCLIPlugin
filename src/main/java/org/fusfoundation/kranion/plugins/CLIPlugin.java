@@ -28,7 +28,7 @@ public class CLIPlugin implements Plugin, ActionListener {
     private View view;
     private Controller controller;
     private CLI cliThread;
-    private int cliPort = 9000;
+    private int cliPort = 9000; // Bind to model attribute
     private ListControl cmdList;
     private MessageBoxDialog messageDialog;
     @Override
@@ -48,6 +48,7 @@ public class CLIPlugin implements Plugin, ActionListener {
         Renderable mainPanel = Renderable.lookupByTag("MainFlyout");
         if (mainPanel != null && mainPanel instanceof FlyoutPanel) {
 //            RenderLayer
+//            Possibly add to mainPanel
             RenderLayer overlay = (RenderLayer)Renderable.lookupByTag("DefaultView.overlay_layer");
             messageDialog = new MessageBoxDialog("");
             messageDialog.setTag("mbCLIDialog");
@@ -64,7 +65,8 @@ public class CLIPlugin implements Plugin, ActionListener {
             cliStateToggle.setIndicatorRadius(8f);
             cliStateToggle.setCommand("toggleCLI");
             cliStateToggle.setTag("toggleCLIStateBtn");
-            
+//    textbox.setPropertyPrefix("Model.Attribute"); // model will report propery updates with this prefix
+//    model.addObserver(textbox);
             TextBox portNumBox = new TextBox(190, height - 105, 100, 25, Integer.toString(cliPort), controller);
             portNumBox.setIsNumeric(true);
             portNumBox.setTextEditable(true);
@@ -81,6 +83,8 @@ public class CLIPlugin implements Plugin, ActionListener {
             panel.addChild("CLIPlugin",cmdList);
             
             this.cliThread = new CLI(model, view, cliPort);
+        } else {
+            System.out.println("******* Error Initializing CLIPlugin !! ****************");
         }
     }
     
@@ -97,7 +101,7 @@ public class CLIPlugin implements Plugin, ActionListener {
         String command = e.getActionCommand();
         Object source = e.getSource();
         switch (command) {
-            case "toggleCLI" -> {
+            case "toggleCLI":
                 boolean cliOn = ((Button)source).getIndicator();
 //                            portNumBox.setTextEditable(true);
                 if (cliOn) {
@@ -118,8 +122,8 @@ public class CLIPlugin implements Plugin, ActionListener {
                 } else {
                     cliThread.interrupt();
                 }
-            }
-            case "portNumChange" -> {
+                break;
+            case "portNumChange":
                 TextBox portBox = (TextBox)source;
                 String portNum = portBox.getText();
                 portNum = portNum.replaceAll("[^0-9]","");
@@ -133,8 +137,8 @@ public class CLIPlugin implements Plugin, ActionListener {
                 }
                 portBox.setText(portNum);
                 cliPort = Integer.parseInt(portNum);
-            }
-            case "doubleClick" -> {
+                break;
+            case "doubleClick":
                 if (e.getSource() instanceof ListControl) {
                     ListControl lc = (ListControl)e.getSource();
                     CLIError err = (CLIError)lc.getSelectedValue();
@@ -143,7 +147,7 @@ public class CLIPlugin implements Plugin, ActionListener {
                     messageDialog.open();
                     System.out.println(err.body);
                 }
-            }
+                break;
         }
     }
 }
